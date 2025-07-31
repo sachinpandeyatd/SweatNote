@@ -1,6 +1,7 @@
 package com.sweatnote.app.ui.viewmodels
 
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -11,6 +12,13 @@ object AppViewModelProvider{
     val Factory = viewModelFactory {
         initializer {
             ExerciseListViewModel(
+                exerciseDao = sweatNoteApplication().database.exerciseDao()
+            )
+        }
+
+        initializer {
+            LiveWorkoutViewModel(
+                savedStateHandle = this.createSavedStateHandle(),
                 exerciseDao = sweatNoteApplication().database.exerciseDao()
             )
         }

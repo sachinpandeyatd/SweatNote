@@ -19,7 +19,7 @@ fun DashboardScreen(navController: NavController) {
     ) {
         Text("Dashboard Screen")
         Button(onClick = { navController.navigate("exercise_list") }) {
-            Text("View All Exercises")
+            Text("Start Empty Workout")
         }
     }
 }
