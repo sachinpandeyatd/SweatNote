@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "559888971708",
+    "project_id": "sweatnote-c349d",
+    "storage_bucket": "sweatnote-c349d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:559888971708:android:59f33e3ba755169f1b5db9",
+        "android_client_info": {
+          "package_name": "com.sweatnote.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBrGMzviszMwbC2N35DFzJ6jSp8qxFhxb8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
