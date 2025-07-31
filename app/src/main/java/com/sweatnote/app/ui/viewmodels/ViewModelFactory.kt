@@ -19,7 +19,8 @@ object AppViewModelProvider{
         initializer {
             LiveWorkoutViewModel(
                 savedStateHandle = this.createSavedStateHandle(),
-                exerciseDao = sweatNoteApplication().database.exerciseDao()
+                exerciseDao = sweatNoteApplication().database.exerciseDao(),
+                workoutHistoryDao = sweatNoteApplication().database.workoutHistoryDao()
             )
         }
     }

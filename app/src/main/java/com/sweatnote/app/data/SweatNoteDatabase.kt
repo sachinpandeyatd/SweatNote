@@ -9,9 +9,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Exercise::class], version = 1, exportSchema = false)
+@Database(entities = [Exercise::class, WorkoutSession::class, SessionExercise::class, SessionSet::class], version = 2, exportSchema = false)
 abstract class SweatNoteDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
+    abstract fun workoutHistoryDao(): WorkoutHistoryDao
 
     companion object{
         @Volatile
@@ -28,10 +29,8 @@ abstract class SweatNoteDatabase : RoomDatabase() {
     private class DatabaseCallback(private val context: Context) : RoomDatabase.Callback(){
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            Instance?.let{ database ->
-                CoroutineScope(Dispatchers.IO).launch {
-                    populateDatabase(database.exerciseDao())
-                }
+            CoroutineScope(Dispatchers.IO).launch {
+                populateDatabase(Instance!!.exerciseDao())
             }
         }
 

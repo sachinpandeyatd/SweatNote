@@ -2,6 +2,7 @@ package com.sweatnote.app.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -11,16 +12,15 @@ import com.sweatnote.app.ui.screens.DashboardScreen
 import com.sweatnote.app.ui.screens.HistoryScreen
 import com.sweatnote.app.ui.screens.ProfileScreen
 import com.sweatnote.app.ui.screens.RoutinesScreen
-
-import com.sweatnote.app.ui.screens.exercise.ExerciseListScreen as ExerciseListComposable
-import com.sweatnote.app.ui.screens.workout.LiveWorkoutScreen as LiveWorkoutComposable
-
-import com.sweatnote.app.navigation.ExerciseListScreen as ExerciseListRoute
-import com.sweatnote.app.navigation.LiveWorkoutScreen as LiveWorkoutRoute
+import com.sweatnote.app.ui.screens.exercise.ExerciseListScreen
+import com.sweatnote.app.ui.screens.workout.LiveWorkoutScreen
+import com.sweatnote.app.ui.viewmodels.AppViewModelProvider
+import com.sweatnote.app.ui.viewmodels.LiveWorkoutViewModel
 
 @Composable
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier){
     NavHost(navController = navController, startDestination = Screen.Dashboard.route, modifier = modifier){
+
         composable(Screen.Dashboard.route){
             DashboardScreen(navController = navController)
         }
@@ -33,15 +33,23 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier){
         composable(Screen.Profile.route){
             ProfileScreen()
         }
-        composable(ExerciseListRoute.route) {
-            ExerciseListComposable(navController = navController)
+        composable(route = com.sweatnote.app.navigation.ExerciseListScreen.route) {
+            ExerciseListScreen(navController = navController)
         }
 
         composable(
-            route = LiveWorkoutRoute.routeWithArgs,
-            arguments = listOf(navArgument(LiveWorkoutRoute.exerciseIdsArg) { type = NavType.StringType })
-        ) {
-            LiveWorkoutComposable()
+            route = com.sweatnote.app.navigation.LiveWorkoutScreen.routeWithArgs,
+            arguments = listOf(navArgument(com.sweatnote.app.navigation.LiveWorkoutScreen.exerciseIdsArg) {
+                type = NavType.StringType })
+        ) { backStackEntry ->
+            val liveWorkoutViewModel: LiveWorkoutViewModel = viewModel(
+                factory = AppViewModelProvider.Factory,
+                viewModelStoreOwner = backStackEntry
+            )
+            LiveWorkoutScreen(
+                navController = navController,
+                viewModel = liveWorkoutViewModel
+            )
         }
     }
 }

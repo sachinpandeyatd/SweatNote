@@ -6,20 +6,59 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sweatnote.app.data.ExerciseDao
 import com.sweatnote.app.data.LiveWorkoutExercise
+import com.sweatnote.app.data.SessionExercise
+import com.sweatnote.app.data.SessionSet
+import com.sweatnote.app.data.WorkoutHistoryDao
+import com.sweatnote.app.data.WorkoutSession
 import com.sweatnote.app.data.WorkoutSet
 import com.sweatnote.app.navigation.LiveWorkoutScreen
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class LiveWorkoutViewModel(savedStateHandle: SavedStateHandle, private val exerciseDao: ExerciseDao) : ViewModel(){
+class LiveWorkoutViewModel(savedStateHandle: SavedStateHandle, private val exerciseDao: ExerciseDao, private val workoutHistoryDao: WorkoutHistoryDao) : ViewModel(){
     private val _uiState = MutableStateFlow<List<LiveWorkoutExercise>> (emptyList())
     val uiState = _uiState.asStateFlow()
 
     init{
         val exerciseIdsString: String = checkNotNull(savedStateHandle[LiveWorkoutScreen.exerciseIdsArg])
         fetchExercises(exerciseIdsString)
+    }
+
+    private val _navigateBack = MutableSharedFlow<Unit>()
+    val navigateBack = _navigateBack.asSharedFlow()
+
+    fun finishWorkout(){
+        viewModelScope.launch {
+            val newSessionId = workoutHistoryDao.insertSession(WorkoutSession())
+
+            _uiState.value.forEach{liveExercise ->
+                val completedSets = liveExercise.sets.filter { it.reps.isNotBlank() }
+                if(completedSets.isNotEmpty()){
+                    val newSessionExerciseId = workoutHistoryDao.insertSessionExercise(
+                        SessionExercise(
+                            sessionId = newSessionId,
+                            baseExerciseId = liveExercise.exercise.id,
+                            exerciseName = liveExercise.exercise.name
+                        )
+                    )
+                    completedSets.forEach{set ->
+                        workoutHistoryDao.insertSessionSet(
+                            SessionSet(
+                                sessionExerciseId = newSessionExerciseId,
+                                weight = set.weight.toDoubleOrNull() ?: 0.0,
+                                reps = set.reps.toIntOrNull() ?: 0
+                            )
+                        )
+                    }
+                }
+            }
+
+            _navigateBack.emit(Unit)
+        }
     }
 
     private fun fetchExercises(idsString: String){

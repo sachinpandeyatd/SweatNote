@@ -13,7 +13,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,8 +24,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -31,24 +35,47 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.sweatnote.app.data.LiveWorkoutExercise
 import com.sweatnote.app.data.WorkoutSet
 import com.sweatnote.app.ui.viewmodels.AppViewModelProvider
 import com.sweatnote.app.ui.viewmodels.LiveWorkoutViewModel
+import kotlinx.coroutines.flow.collect
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LiveWorkoutScreen() {
-    val liveWorkoutViewModel: LiveWorkoutViewModel = viewModel(
-        factory = AppViewModelProvider.Factory
-    )
+fun LiveWorkoutScreen(navController: NavController, viewModel: LiveWorkoutViewModel) {
+//    val liveWorkoutViewModel: LiveWorkoutViewModel = viewModel(
+//        factory = AppViewModelProvider.Factory
+//    )
 
-    val uiState by liveWorkoutViewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.navigateBack.collect{
+            navController.navigate(com.sweatnote.app.navigation.Screen.Dashboard.route){
+                popUpTo(navController.graph.id){
+                    inclusive = true
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Live Workout") })
+            TopAppBar(title = { Text("Live Workout") },
+                actions = {
+                    TextButton(
+                        onClick = {viewModel.finishWorkout()},
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Default.Done, contentDescription = "Finish Workout")
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Finish")
+                    }
+                }
+            )
         }
     ) { innerPadding ->
         LazyColumn(
@@ -61,13 +88,13 @@ fun LiveWorkoutScreen() {
                 WorkoutExerciseCard(
                     liveExercise = liveExercise,
                     onWeightChanged = {setId, newWeight ->
-                        liveWorkoutViewModel.onWeightChanged(liveExercise.exercise.id, setId, newWeight)
+                        viewModel.onWeightChanged(liveExercise.exercise.id, setId, newWeight)
                     },
                     onRepsChanged = { setId, newReps ->
-                        liveWorkoutViewModel.onRepsChanged(liveExercise.exercise.id, setId, newReps)
+                        viewModel.onRepsChanged(liveExercise.exercise.id, setId, newReps)
                     },
                     onAddSet = {
-                        liveWorkoutViewModel.addSet(liveExercise.exercise.id)
+                        viewModel.addSet(liveExercise.exercise.id)
                     })
             }
         }
