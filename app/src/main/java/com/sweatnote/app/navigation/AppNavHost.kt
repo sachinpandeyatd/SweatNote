@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.sweatnote.app.ui.screens.DashboardScreen
+import com.sweatnote.app.ui.screens.ExerciseListScreen
 import com.sweatnote.app.ui.screens.HistoryScreen
 import com.sweatnote.app.ui.screens.ProfileScreen
 import com.sweatnote.app.ui.screens.RoutinesScreen
@@ -14,7 +15,7 @@ import com.sweatnote.app.ui.screens.RoutinesScreen
 fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier){
     NavHost(navController = navController, startDestination = Screen.Dashboard.route, modifier = modifier){
         composable(Screen.Dashboard.route){
-            DashboardScreen()
+            DashboardScreen(navController = navController)
         }
         composable(Screen.History.route){
             HistoryScreen()
@@ -24,6 +25,9 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier){
         }
         composable(Screen.Profile.route){
             ProfileScreen()
+        }
+        composable("exercise_list") {
+            ExerciseListScreen()
         }
     }
 }
