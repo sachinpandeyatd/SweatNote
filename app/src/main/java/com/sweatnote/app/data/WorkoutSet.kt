@@ -9,4 +9,4 @@ data class WorkoutSet(
     var isCompleted: Boolean = false
 )
 
-data class LiveWorkoutState(val exercise: Exercise, val sets: MutableList<WorkoutSet> = mutableListOf(WorkoutSet()))
+data class LiveWorkoutExercise(val exercise: Exercise, val sets: MutableList<WorkoutSet> = mutableListOf(WorkoutSet()))
