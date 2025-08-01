@@ -23,6 +23,12 @@ object AppViewModelProvider{
                 workoutHistoryDao = sweatNoteApplication().database.workoutHistoryDao()
             )
         }
+
+        initializer {
+            HistoryViewModel(
+                workoutHistoryDao = sweatNoteApplication().database.workoutHistoryDao()
+            )
+        }
     }
 }
 
