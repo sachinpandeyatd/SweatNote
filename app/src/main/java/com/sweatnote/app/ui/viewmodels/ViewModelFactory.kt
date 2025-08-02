@@ -29,6 +29,12 @@ object AppViewModelProvider{
                 workoutHistoryDao = sweatNoteApplication().database.workoutHistoryDao()
             )
         }
+
+        initializer {
+            RoutinesViewModel(
+                routineDao = sweatNoteApplication().database.routineDao()
+            )
+        }
     }
 }
 

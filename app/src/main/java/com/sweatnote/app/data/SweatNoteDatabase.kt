@@ -9,10 +9,21 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Exercise::class, WorkoutSession::class, SessionExercise::class, SessionSet::class], version = 2, exportSchema = false)
+@Database(
+    entities = [
+        Exercise::class,
+        WorkoutSession::class,
+        SessionExercise::class,
+        SessionSet::class,
+        Routine::class,
+        RoutineExercise::class
+    ],
+    version = 3,
+    exportSchema = false)
 abstract class SweatNoteDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
     abstract fun workoutHistoryDao(): WorkoutHistoryDao
+    abstract fun routineDao(): RoutineDao
 
     companion object{
         @Volatile

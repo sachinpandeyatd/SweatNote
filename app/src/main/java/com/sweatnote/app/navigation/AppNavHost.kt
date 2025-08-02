@@ -27,8 +27,8 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier){
         composable(Screen.History.route){
             HistoryScreen()
         }
-        composable(Screen.Routines.route){
-            RoutinesScreen()
+        composable(route = Screen.Routines.route){
+            RoutinesScreen(navController = navController)
         }
         composable(Screen.Profile.route){
             ProfileScreen()
