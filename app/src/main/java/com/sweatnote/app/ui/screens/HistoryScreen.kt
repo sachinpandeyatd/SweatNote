@@ -14,15 +14,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.outlined.Brightness4
+import androidx.compose.material.icons.outlined.Nightlight
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,16 +41,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kizitonwose.calendar.compose.HorizontalCalendar
 import com.kizitonwose.calendar.compose.VerticalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.CalendarDay
@@ -56,12 +60,10 @@ import com.sweatnote.app.data.WorkoutSessionWithDetails
 import com.sweatnote.app.ui.viewmodels.AppViewModelProvider
 import com.sweatnote.app.ui.viewmodels.HistoryViewModel
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -109,7 +111,6 @@ fun MonthView(viewModel: HistoryViewModel, onDateClick: (LocalDate) -> Unit) {
     val workoutDates by viewModel.workoutDates.collectAsState()
     val visibleMonth by viewModel.visibleMonth.collectAsState()
 
-    // We'll use VerticalCalendar and control the month programmatically
     val state = rememberCalendarState(
         startMonth = visibleMonth,
         endMonth = visibleMonth,
@@ -117,14 +118,12 @@ fun MonthView(viewModel: HistoryViewModel, onDateClick: (LocalDate) -> Unit) {
     )
 
     Column {
-        // --- OUR NEW CUSTOM MONTH HEADER ---
         MonthNavigationHeader(
             visibleMonth = visibleMonth,
             onPreviousMonth = { viewModel.goToPreviousMonth() },
             onNextMonth = { viewModel.goToNextMonth() }
         )
 
-        // Day of the week header (S, M, T, W, T, F, S)
         val daysOfWeek = daysOfWeek()
         Row(
             modifier = Modifier
@@ -144,7 +143,6 @@ fun MonthView(viewModel: HistoryViewModel, onDateClick: (LocalDate) -> Unit) {
 
         Divider()
 
-        // The calendar itself, now vertical and non-scrollable by swipe
         VerticalCalendar(
             state = state,
             dayContent = { day ->
@@ -251,39 +249,73 @@ fun DayView(viewModel: HistoryViewModel) {
 
 @Composable
 fun WorkoutHistoryCard(session: WorkoutSessionWithDetails) {
+    // Logic to determine the title and icon based on time of day
     val calendar = Calendar.getInstance().apply { timeInMillis = session.session.date }
-    val title = when (calendar.get(Calendar.HOUR_OF_DAY)) {
-        in 0..11 -> "Morning Workout"
-        in 12..16 -> "Afternoon Workout"
-        else -> "Evening Workout"
+    val (title: String, icon: ImageVector) = when (calendar.get(Calendar.HOUR_OF_DAY)) {
+        in 0..11 -> "Morning Workout" to Icons.Default.WbSunny
+        in 12..16 -> "Afternoon Workout" to Icons.Outlined.Brightness4
+        else -> "Evening Workout" to Icons.Outlined.Nightlight
     }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        // Use more subtle colors for a premium feel
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            session.exercises.forEach { exerciseWithSets ->
-                Text(
-                    text = exerciseWithSets.sessionExercise.exerciseName,
-                    style = MaterialTheme.typography.titleMedium
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
+            // --- 1. Redesigned Title Row with Icon ---
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                exerciseWithSets.sets.forEach { set ->
-                    Text(
-                        text = "  •  ${set.weight} kg x ${set.reps} reps",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(start = 8.dp, top = 4.dp)
-                    )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // --- 2. Improved Exercise and Set Display ---
+            // Using a Column to contain all exercises for consistent spacing
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                session.exercises.forEach { exerciseWithSets ->
+                    Column {
+                        // Exercise Name stands out
+                        Text(
+                            text = exerciseWithSets.sessionExercise.exerciseName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Sets are clearly nested under the exercise
+                        Column(modifier = Modifier.padding(start = 8.dp)) {
+                            exerciseWithSets.sets.forEach { set ->
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // The bullet point for a classic list look
+                                    Text(
+                                        text = "•",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(
+                                        text = "${set.weight} kg x ${set.reps} reps",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant // Slightly muted for better hierarchy
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
