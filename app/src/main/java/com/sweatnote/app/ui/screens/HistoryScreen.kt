@@ -3,8 +3,10 @@ package com.sweatnote.app.ui.screens
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,8 +19,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -38,9 +46,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kizitonwose.calendar.compose.HorizontalCalendar
+import com.kizitonwose.calendar.compose.VerticalCalendar
 import com.kizitonwose.calendar.compose.rememberCalendarState
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
+import com.kizitonwose.calendar.core.daysOfWeek
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.sweatnote.app.data.WorkoutSessionWithDetails
 import com.sweatnote.app.ui.viewmodels.AppViewModelProvider
@@ -97,37 +107,86 @@ fun HistoryScreen(viewModel: HistoryViewModel = viewModel(factory = AppViewModel
 @Composable
 fun MonthView(viewModel: HistoryViewModel, onDateClick: (LocalDate) -> Unit) {
     val workoutDates by viewModel.workoutDates.collectAsState()
+    val visibleMonth by viewModel.visibleMonth.collectAsState()
 
-    val currentMonth = remember { YearMonth.now() }
-    val startMonth = remember { currentMonth.minusMonths(12) } // Show past 12 months
-    val endMonth = remember { currentMonth.plusMonths(12) } // Show future 12 months
-    val firstDayOfWeek = remember { firstDayOfWeekFromLocale() }
-
+    // We'll use VerticalCalendar and control the month programmatically
     val state = rememberCalendarState(
-        startMonth = startMonth,
-        endMonth = endMonth,
-        firstVisibleMonth = currentMonth,
-        firstDayOfWeek = firstDayOfWeek
+        startMonth = visibleMonth,
+        endMonth = visibleMonth,
+        firstDayOfWeek = firstDayOfWeekFromLocale()
     )
 
-    HorizontalCalendar(
-        state = state,
-        dayContent = { day ->
-            DayCell(
-                day = day,
-                hasWorkout = day.date in workoutDates,
-                onDateClick = onDateClick
-            )
-        },
-        monthHeader = { month ->
-            val formatter = DateTimeFormatter.ofPattern("MMMM yyyy")
-            Text(
-                text = month.yearMonth.format(formatter),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(vertical = 16.dp, horizontal = 16.dp)
-            )
+    Column {
+        // --- OUR NEW CUSTOM MONTH HEADER ---
+        MonthNavigationHeader(
+            visibleMonth = visibleMonth,
+            onPreviousMonth = { viewModel.goToPreviousMonth() },
+            onNextMonth = { viewModel.goToNextMonth() }
+        )
+
+        // Day of the week header (S, M, T, W, T, F, S)
+        val daysOfWeek = daysOfWeek()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp, horizontal = 4.dp)
+        ) {
+            for (dayOfWeek in daysOfWeek) {
+                Text(
+                    modifier = Modifier.weight(1f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    text = dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.getDefault()),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
-    )
+
+        Divider()
+
+        // The calendar itself, now vertical and non-scrollable by swipe
+        VerticalCalendar(
+            state = state,
+            dayContent = { day ->
+                DayCell(
+                    day = day,
+                    hasWorkout = day.date in workoutDates,
+                    onDateClick = onDateClick
+                )
+            }
+        )
+    }
+}
+
+@Composable
+fun MonthNavigationHeader(
+    visibleMonth: YearMonth,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit
+) {
+    val formatter = DateTimeFormatter.ofPattern("MMMM yyyy")
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        IconButton(onClick = onPreviousMonth) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous Month")
+        }
+
+        Text(
+            text = visibleMonth.format(formatter),
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        IconButton(onClick = onNextMonth) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next Month")
+        }
+    }
 }
 
 @Composable

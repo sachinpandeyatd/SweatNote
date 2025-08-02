@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 
 class HistoryViewModel (workoutHistoryDao: WorkoutHistoryDao) : ViewModel() {
@@ -25,6 +26,9 @@ class HistoryViewModel (workoutHistoryDao: WorkoutHistoryDao) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
+
+    private val _visibleMonth = MutableStateFlow(YearMonth.now())
+    val visibleMonth: StateFlow<YearMonth> = _visibleMonth.asStateFlow()
 
     val workoutDates: StateFlow<Set<LocalDate>> = allSession.map { sessions ->
         sessions.map {
@@ -54,5 +58,13 @@ class HistoryViewModel (workoutHistoryDao: WorkoutHistoryDao) : ViewModel() {
 
     fun onDateSelected(date: LocalDate){
         _selectedDate.value = date
+    }
+
+    fun goToPreviousMonth() {
+        _visibleMonth.value = _visibleMonth.value.minusMonths(1)
+    }
+
+    fun goToNextMonth() {
+        _visibleMonth.value = _visibleMonth.value.plusMonths(1)
     }
 }
