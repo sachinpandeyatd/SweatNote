@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class LiveWorkoutViewModel(savedStateHandle: SavedStateHandle, private val exerciseDao: ExerciseDao, private val workoutHistoryDao: WorkoutHistoryDao) : ViewModel(){
     private val _uiState = MutableStateFlow<List<LiveWorkoutExercise>> (emptyList())
@@ -115,6 +116,22 @@ class LiveWorkoutViewModel(savedStateHandle: SavedStateHandle, private val exerc
                     }
                     liveExercise.copy(sets = updatedSets)
                 } else {
+                    liveExercise
+                }
+            }
+        }
+    }
+
+    fun toggleSetCompletion(exerciseId: Int, setId: UUID) {
+        _uiState.update { currentState ->
+            currentState.map { liveExercise ->
+                if(liveExercise.exercise.id == exerciseId){
+                    val updatedSets = liveExercise.sets.map { set ->
+                        if (set.id == setId) set.copy(isCompleted = !set.isCompleted) else set
+                    }
+
+                    liveExercise.copy(sets = updatedSets.toMutableList())
+                }else{
                     liveExercise
                 }
             }

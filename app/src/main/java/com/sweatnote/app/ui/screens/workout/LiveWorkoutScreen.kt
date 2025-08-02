@@ -20,8 +20,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,14 +43,12 @@ import com.sweatnote.app.data.WorkoutSet
 import com.sweatnote.app.ui.viewmodels.AppViewModelProvider
 import com.sweatnote.app.ui.viewmodels.LiveWorkoutViewModel
 import kotlinx.coroutines.flow.collect
+import java.util.UUID
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveWorkoutScreen(navController: NavController, viewModel: LiveWorkoutViewModel) {
-//    val liveWorkoutViewModel: LiveWorkoutViewModel = viewModel(
-//        factory = AppViewModelProvider.Factory
-//    )
 
     val uiState by viewModel.uiState.collectAsState()
 
@@ -95,6 +95,9 @@ fun LiveWorkoutScreen(navController: NavController, viewModel: LiveWorkoutViewMo
                     },
                     onAddSet = {
                         viewModel.addSet(liveExercise.exercise.id)
+                    },
+                    onToggleSetComplete = {setId ->
+                        viewModel.toggleSetCompletion(liveExercise.exercise.id, setId)
                     })
             }
         }
@@ -106,7 +109,8 @@ fun WorkoutExerciseCard(
     liveExercise: LiveWorkoutExercise,
     onWeightChanged: (setId: java.util.UUID, newWeight: String) -> Unit,
     onRepsChanged: (setId: java.util.UUID, newReps: String) -> Unit,
-    onAddSet: () -> Unit) {
+    onAddSet: () -> Unit,
+    onToggleSetComplete: (setId: UUID) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
     ){
@@ -127,7 +131,8 @@ fun WorkoutExerciseCard(
                     setNumber = index + 1,
                     previousSetInfo = previousInfo,
                     onWeightChange = { newWeight -> onWeightChanged(set.id, newWeight) },
-                    onRepsChange = { newReps -> onRepsChanged(set.id, newReps) }
+                    onRepsChange = { newReps -> onRepsChanged(set.id, newReps) },
+                    onToggleComplete = {onToggleSetComplete(set.id)}
                 )
             }
 
@@ -151,8 +156,20 @@ fun SetInputRow(
     setNumber: Int,
     previousSetInfo: String,
     onWeightChange: (String) -> Unit,
-    onRepsChange: (String) -> Unit
+    onRepsChange: (String) -> Unit,
+    onToggleComplete: () -> Unit
 ) {
+    val isCompleted = set.isCompleted
+    val colors = if(isCompleted){
+        OutlinedTextFieldDefaults.colors(
+            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+            disabledBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }else{
+        OutlinedTextFieldDefaults.colors()
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -179,7 +196,9 @@ fun SetInputRow(
             onValueChange = onWeightChange,
             label = { Text("kg") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(2f)
+            modifier = Modifier.weight(2f),
+            enabled = !isCompleted,
+            colors = colors
         )
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -189,16 +208,23 @@ fun SetInputRow(
             onValueChange = onRepsChange,
             label = { Text("Reps") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(2f)
+            modifier = Modifier.weight(2f),
+            enabled = !isCompleted,
+            colors = colors
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        IconButton(
-            onClick = {},
+        IconToggleButton(
+            checked = isCompleted,
+            onCheckedChange = {onToggleComplete()},
             modifier = Modifier.weight(1f)
         ) {
-            Icon(Icons.Default.Check, contentDescription = "Mark set complete")
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Mark set complete",
+                tint = if(isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
         }
     }
 }
