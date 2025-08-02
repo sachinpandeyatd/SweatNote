@@ -67,7 +67,9 @@ class LiveWorkoutViewModel(savedStateHandle: SavedStateHandle, private val exerc
             if(ids.isNotEmpty()){
                 val exercisesFromDb = exerciseDao.getExercisesByIds(ids)
                 val workoutExercises = exercisesFromDb.map{dbExercise ->
-                    LiveWorkoutExercise(exercise = dbExercise)
+                    val previousSets = workoutHistoryDao.getLatestSetsForExercise(dbExercise.id)
+
+                    LiveWorkoutExercise(exercise = dbExercise, previousPerformance = previousSets)
                 }
                 _uiState.value = workoutExercises
             }

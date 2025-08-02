@@ -120,9 +120,12 @@ fun WorkoutExerciseCard(
             )
 
             liveExercise.sets.forEachIndexed { index, set ->
+                val previousSet = liveExercise.previousPerformance.getOrNull(index)
+                val previousInfo = previousSet?.let { "${it.weight}kg x ${it.reps}" } ?: "-/-"
                 SetInputRow(
                     set = set,
                     setNumber = index + 1,
+                    previousSetInfo = previousInfo,
                     onWeightChange = { newWeight -> onWeightChanged(set.id, newWeight) },
                     onRepsChange = { newReps -> onRepsChanged(set.id, newReps) }
                 )
@@ -146,6 +149,7 @@ fun WorkoutExerciseCard(
 fun SetInputRow(
     set: WorkoutSet,
     setNumber: Int,
+    previousSetInfo: String,
     onWeightChange: (String) -> Unit,
     onRepsChange: (String) -> Unit
 ) {
@@ -156,11 +160,19 @@ fun SetInputRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = "$setNumber",
-            modifier = Modifier.weight(0.5f),
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Column(modifier = Modifier.weight(0.7f), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "$setNumber",
+                modifier = Modifier.weight(0.5f),
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Text(
+                text = previousSetInfo,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
         OutlinedTextField(
             value = set.weight,
