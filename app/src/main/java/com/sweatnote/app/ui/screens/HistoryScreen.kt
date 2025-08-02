@@ -50,6 +50,7 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -182,7 +183,7 @@ fun DayView(viewModel: HistoryViewModel) {
                 )
             }
         }else{
-            items(sessionForDay){session ->
+            items(sessionForDay, key = {it.session.id}) {session ->
                 WorkoutHistoryCard(session = session)
             }
         }
@@ -190,38 +191,39 @@ fun DayView(viewModel: HistoryViewModel) {
 }
 
 @Composable
-fun WorkoutHistoryCard(session: WorkoutSessionWithDetails){
-    val dateFormatter = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
-    val formattedDate = dateFormatter.format(Date(session.session.date))
+fun WorkoutHistoryCard(session: WorkoutSessionWithDetails) {
+    val calendar = Calendar.getInstance().apply { timeInMillis = session.session.date }
+    val title = when (calendar.get(Calendar.HOUR_OF_DAY)) {
+        in 0..11 -> "Morning Workout"
+        in 12..16 -> "Afternoon Workout"
+        else -> "Evening Workout"
+    }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-    ){
-        Column (modifier = Modifier.padding(16.dp)){
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = formattedDate,
+                text = title,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            session.exercises.forEach{exerciseWithSet ->
+            session.exercises.forEach { exerciseWithSets ->
                 Text(
-                    text = exerciseWithSet.sessionExercise.exerciseName,
+                    text = exerciseWithSets.sessionExercise.exerciseName,
                     style = MaterialTheme.typography.titleMedium
                 )
-
-                exerciseWithSet.sets.forEach{set ->
+                exerciseWithSets.sets.forEach { set ->
                     Text(
                         text = "  •  ${set.weight} kg x ${set.reps} reps",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(start = 8.dp, top = 4.dp)
                     )
                 }
-
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
