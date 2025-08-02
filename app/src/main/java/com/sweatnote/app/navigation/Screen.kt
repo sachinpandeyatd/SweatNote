@@ -21,12 +21,13 @@ val bottomNavItems = listOf(
     Screen.Profile
 )
 
-object ExerciseListScreen {
-    const val route = "exercise_list"
-}
-
 object LiveWorkoutScreen {
     const val route = "live_workout"
     const val exerciseIdsArg = "exerciseIds" // The argument name as a constant
     val routeWithArgs = "$route/{$exerciseIdsArg}" // The full route with argument placeholder
+}
+
+object ExerciseListScreen{
+    const val routeForWorkout = "exercise_list_for_workout"
+    const val routeForRoutine = "exercise_list_for_routine"
 }

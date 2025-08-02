@@ -47,7 +47,7 @@ fun RoutinesScreen(
         topBar = { TopAppBar(title = { Text("Workout Routines") }) },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                //
+                navController.navigate(com.sweatnote.app.navigation.ExerciseListScreen.routeForRoutine)
             }) {
                 Icon(Icons.Default.Add, contentDescription = "Create Routine")
             }

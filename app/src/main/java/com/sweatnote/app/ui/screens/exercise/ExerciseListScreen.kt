@@ -1,6 +1,5 @@
 package com.sweatnote.app.ui.screens.exercise
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,18 +8,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -29,16 +37,35 @@ import com.sweatnote.app.data.Exercise
 import com.sweatnote.app.navigation.LiveWorkoutScreen
 import com.sweatnote.app.ui.viewmodels.AppViewModelProvider
 import com.sweatnote.app.ui.viewmodels.ExerciseListViewModel
+import com.sweatnote.app.ui.viewmodels.RoutinesViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseListScreen(
-    navController: NavController,
-    viewModel: ExerciseListViewModel = viewModel(factory = AppViewModelProvider.Factory)
+    navController: NavController, mode: String,
+    exerciseViewModel: ExerciseListViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    routinesViewModel: RoutinesViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ){
-    val exerciseList by viewModel.exerciseList.collectAsState()
-    val selectedIds by viewModel.selectedExerciseIds.collectAsState()
+    val exerciseList by exerciseViewModel.exerciseList.collectAsState()
+    val selectedIds by exerciseViewModel.selectedExerciseIds.collectAsState()
+
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+    var routineName by remember { mutableStateOf("") }
+
+    if (showDialog){
+        SaveRoutineDialog(
+            routineName = routineName,
+            onNameChange = { routineName = it },
+            onDismiss = { showDialog = false },
+            onSave = {
+                val ids = selectedIds.toList()
+                routinesViewModel.saveRoutine(routineName, ids)
+                showDialog = false
+                navController.popBackStack()
+            }
+        )
+    }
 
     Scaffold (
         topBar = {
@@ -46,23 +73,34 @@ fun ExerciseListScreen(
         },
         floatingActionButton = {
             if(selectedIds.isNotEmpty()){
-                FloatingActionButton(onClick = {
-                    val ids = selectedIds.joinToString(separator = ",")
-                    navController.navigate("${LiveWorkoutScreen.route}/$ids")
-                }) {
-                    Icon(Icons.Default.ArrowForward, contentDescription = "Start Workout")
+                FloatingActionButton(
+                    onClick = {
+                        if (mode == "workout") {
+                            val ids = selectedIds.joinToString(separator = ",")
+                            navController.navigate("${LiveWorkoutScreen.route}/$ids")
+                        }else{
+                            showDialog = true
+                        }
+                    }
+                ) {
+                    val icon = if (mode == "workout") Icons.Default.ArrowForward else Icons.Default.Send
+                    Icon(icon, contentDescription = "Next")
                 }
             }
         }
-    ) { innerPadding -> LazyColumn (
+    ) { innerPadding ->
+        LazyColumn (
             modifier = Modifier.padding(innerPadding)
         ) {
-            items(exerciseList) { exercise ->
+            items(
+                items = exerciseList,
+                key = { exercise -> exercise.id }
+            ) { exercise ->
                 val isSelected = exercise.id in selectedIds
                 ExerciseListItem(
                     exercise = exercise,
                     isSelected = isSelected,
-                    onItemClick = {viewModel.toggleExerciseSelection(exercise.id)}
+                    onItemClick = { exerciseViewModel.toggleExerciseSelection(exercise.id) }
                 )
             }
         }
@@ -90,4 +128,38 @@ fun ExerciseListItem(exercise: Exercise, isSelected: Boolean, onItemClick: () ->
             )
         }
     }
+}
+
+@Composable
+fun SaveRoutineDialog(
+    routineName: String,
+    onNameChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Save Routine") },
+        text = {
+            OutlinedTextField(
+                value = routineName,
+                onValueChange = onNameChange,
+                label = { Text("Routine Name") },
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onSave,
+                enabled = routineName.isNotBlank()
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

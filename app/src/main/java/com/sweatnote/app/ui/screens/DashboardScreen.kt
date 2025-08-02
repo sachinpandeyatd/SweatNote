@@ -18,7 +18,7 @@ fun DashboardScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center
     ) {
         Text("Dashboard Screen")
-        Button(onClick = { navController.navigate("exercise_list") }) {
+        Button(onClick = { navController.navigate(com.sweatnote.app.navigation.ExerciseListScreen.routeForWorkout) }) {
             Text("Start Empty Workout")
         }
     }

@@ -33,8 +33,12 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier){
         composable(Screen.Profile.route){
             ProfileScreen()
         }
-        composable(route = com.sweatnote.app.navigation.ExerciseListScreen.route) {
-            ExerciseListScreen(navController = navController)
+        composable(route = com.sweatnote.app.navigation.ExerciseListScreen.routeForWorkout) {
+            ExerciseListScreen(navController = navController, mode = "workout")
+        }
+
+        composable(route = com.sweatnote.app.navigation.ExerciseListScreen.routeForRoutine){
+            ExerciseListScreen(navController = navController, mode = "routine")
         }
 
         composable(
