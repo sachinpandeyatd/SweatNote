@@ -8,7 +8,7 @@ data class Exercise(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,
-    val primaryMuscle: String,
-    val equipment: String,
-    val instructions: String? = null
+
+    val equipment: String? = null, // e.g., "Barbell", "Dumbbell", "Cable"
+    val notes: String? = null      // e.g., "Focus on movements where the arms move upward"
 )

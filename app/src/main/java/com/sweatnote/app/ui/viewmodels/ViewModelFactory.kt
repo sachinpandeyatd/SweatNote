@@ -12,7 +12,7 @@ object AppViewModelProvider{
     val Factory = viewModelFactory {
         initializer {
             ExerciseListViewModel(
-                exerciseDao = sweatNoteApplication().database.exerciseDao()
+                exerciseRepository = sweatNoteApplication().exerciseRepository
             )
         }
 

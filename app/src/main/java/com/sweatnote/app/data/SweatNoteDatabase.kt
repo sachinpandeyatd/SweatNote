@@ -16,14 +16,21 @@ import kotlinx.coroutines.launch
         SessionExercise::class,
         SessionSet::class,
         Routine::class,
-        RoutineExercise::class
+        RoutineExercise::class,
+        MuscleGroup::class,
+        Muscle::class,
+        ExercisePrimaryMuscle::class,
+        ExerciseSecondaryMuscle::class,
+        CacheInfo::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false)
 abstract class SweatNoteDatabase : RoomDatabase() {
     abstract fun exerciseDao(): ExerciseDao
     abstract fun workoutHistoryDao(): WorkoutHistoryDao
     abstract fun routineDao(): RoutineDao
+    abstract fun anatomyDao(): AnatomyDao
+    abstract fun cacheInfoDao(): CacheInfoDao
 
     companion object{
         @Volatile
@@ -40,18 +47,18 @@ abstract class SweatNoteDatabase : RoomDatabase() {
     private class DatabaseCallback(private val context: Context) : RoomDatabase.Callback(){
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            CoroutineScope(Dispatchers.IO).launch {
-                populateDatabase(Instance!!.exerciseDao())
-            }
+//            CoroutineScope(Dispatchers.IO).launch {
+//                populateDatabase(Instance!!.exerciseDao())
+//            }
         }
 
-        suspend fun populateDatabase(exerciseDao: ExerciseDao){
-            exerciseDao.insertExercise(Exercise(name = "Barbell Bench Press", primaryMuscle = "Chest", equipment = "Barbell"))
-            exerciseDao.insertExercise(Exercise(name = "Squat", primaryMuscle = "Legs", equipment = "Barbell"))
-            exerciseDao.insertExercise(Exercise(name = "Deadlift", primaryMuscle = "Back", equipment = "Barbell"))
-            exerciseDao.insertExercise(Exercise(name = "Overhead Press", primaryMuscle = "Shoulders", equipment = "Barbell"))
-            exerciseDao.insertExercise(Exercise(name = "Pull Up", primaryMuscle = "Back", equipment = "Bodyweight"))
-            exerciseDao.insertExercise(Exercise(name = "Dumbbell Curl", primaryMuscle = "Biceps", equipment = "Dumbbell"))
-        }
+//        suspend fun populateDatabase(exerciseDao: ExerciseDao){
+//            exerciseDao.insertExercise(Exercise(name = "Barbell Bench Press", primaryMuscle = "Chest", equipment = "Barbell"))
+//            exerciseDao.insertExercise(Exercise(name = "Squat", primaryMuscle = "Legs", equipment = "Barbell"))
+//            exerciseDao.insertExercise(Exercise(name = "Deadlift", primaryMuscle = "Back", equipment = "Barbell"))
+//            exerciseDao.insertExercise(Exercise(name = "Overhead Press", primaryMuscle = "Shoulders", equipment = "Barbell"))
+//            exerciseDao.insertExercise(Exercise(name = "Pull Up", primaryMuscle = "Back", equipment = "Bodyweight"))
+//            exerciseDao.insertExercise(Exercise(name = "Dumbbell Curl", primaryMuscle = "Biceps", equipment = "Dumbbell"))
+//        }
     }
 }

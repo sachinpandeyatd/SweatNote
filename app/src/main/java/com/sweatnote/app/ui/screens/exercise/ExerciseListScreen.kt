@@ -30,10 +30,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.sweatnote.app.data.Exercise
+import com.sweatnote.app.data.ExerciseWithMuscles
 import com.sweatnote.app.navigation.LiveWorkoutScreen
 import com.sweatnote.app.ui.viewmodels.AppViewModelProvider
 import com.sweatnote.app.ui.viewmodels.ExerciseListViewModel
@@ -94,13 +96,13 @@ fun ExerciseListScreen(
         ) {
             items(
                 items = exerciseList,
-                key = { exercise -> exercise.id }
-            ) { exercise ->
-                val isSelected = exercise.id in selectedIds
+                key = { item -> item.exercise.id }
+            ) { exerciseWithMuscles ->
+                val isSelected = exerciseWithMuscles.exercise.id in selectedIds
                 ExerciseListItem(
-                    exercise = exercise,
+                    exerciseWithMuscles = exerciseWithMuscles,
                     isSelected = isSelected,
-                    onItemClick = { exerciseViewModel.toggleExerciseSelection(exercise.id) }
+                    onItemClick = { exerciseViewModel.toggleExerciseSelection(exerciseWithMuscles.exercise.id) }
                 )
             }
         }
@@ -108,7 +110,7 @@ fun ExerciseListScreen(
 }
 
 @Composable
-fun ExerciseListItem(exercise: Exercise, isSelected: Boolean, onItemClick: () -> Unit){
+fun ExerciseListItem(exerciseWithMuscles: ExerciseWithMuscles, isSelected: Boolean, onItemClick: () -> Unit){
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clickable { onItemClick() },
         colors = CardDefaults.cardColors(containerColor =
@@ -119,13 +121,35 @@ fun ExerciseListItem(exercise: Exercise, isSelected: Boolean, onItemClick: () ->
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = exercise.name,
-                style = MaterialTheme.typography.titleMedium
+                text = exerciseWithMuscles.exercise.name,
+                style = MaterialTheme.typography.titleLarge
             )
-            Text(
-                text = "Muscle: ${exercise.primaryMuscle}",
-                style = MaterialTheme.typography.bodySmall
-            )
+            exerciseWithMuscles.exercise.equipment?.let {
+                Text(
+                    text = "Equipment: $it",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+
+            if (exerciseWithMuscles.primaryMuscles.isNotEmpty()) {
+                Text(
+                    text = "Primary: ${exerciseWithMuscles.primaryMuscles.joinToString { it.name }}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            if (exerciseWithMuscles.secondaryMuscles.isNotEmpty()) {
+                Text(
+                    text = "Secondary: ${exerciseWithMuscles.secondaryMuscles.joinToString { it.name }}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
     }
 }
