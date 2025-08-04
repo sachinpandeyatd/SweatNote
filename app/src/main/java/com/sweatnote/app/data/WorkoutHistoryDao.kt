@@ -24,4 +24,8 @@ interface WorkoutHistoryDao{
     @Transaction
     @Query("SELECT * FROM session_sets WHERE sessionExerciseId = (SELECT id FROM session_exercises WHERE baseExerciseId = :baseExerciseId ORDER BY id DESC LIMIT 1)")
     suspend fun getLatestSetsForExercise(baseExerciseId: Int): List<SessionSet>
+
+    @Transaction
+    @Query("SELECT * FROM workout_sessions ORDER BY date DESC LIMIT 1")
+    fun getLatestSessionWithDetails(): Flow<WorkoutSessionWithDetails>
 }
