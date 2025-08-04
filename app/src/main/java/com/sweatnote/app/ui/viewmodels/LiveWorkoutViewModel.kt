@@ -137,4 +137,17 @@ class LiveWorkoutViewModel(savedStateHandle: SavedStateHandle, private val exerc
             }
         }
     }
+
+    fun deleteSet(exerciseId: Int, setId: UUID) {
+        _uiState.update { currentState ->
+            currentState.map { liveExercise ->
+                if (liveExercise.exercise.id == exerciseId) {
+                    val updatedSets = liveExercise.sets.filterNot { it.id == setId }
+                    liveExercise.copy(sets = updatedSets.toMutableList())
+                } else {
+                    liveExercise
+                }
+            }
+        }
+    }
 }

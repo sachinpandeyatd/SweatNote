@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -98,6 +100,9 @@ fun LiveWorkoutScreen(navController: NavController, viewModel: LiveWorkoutViewMo
                     },
                     onToggleSetComplete = {setId ->
                         viewModel.toggleSetCompletion(liveExercise.exercise.id, setId)
+                    },
+                    onDeleteSet = { setId ->
+                        viewModel.deleteSet(liveExercise.exercise.id, setId)
                     })
             }
         }
@@ -107,10 +112,11 @@ fun LiveWorkoutScreen(navController: NavController, viewModel: LiveWorkoutViewMo
 @Composable
 fun WorkoutExerciseCard(
     liveExercise: LiveWorkoutExercise,
-    onWeightChanged: (setId: java.util.UUID, newWeight: String) -> Unit,
-    onRepsChanged: (setId: java.util.UUID, newReps: String) -> Unit,
+    onWeightChanged: (setId: UUID, newWeight: String) -> Unit,
+    onRepsChanged: (setId: UUID, newReps: String) -> Unit,
     onAddSet: () -> Unit,
-    onToggleSetComplete: (setId: UUID) -> Unit) {
+    onToggleSetComplete: (setId: UUID) -> Unit,
+    onDeleteSet: (setId: UUID) -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
     ){
@@ -132,7 +138,8 @@ fun WorkoutExerciseCard(
                     previousSetInfo = previousInfo,
                     onWeightChange = { newWeight -> onWeightChanged(set.id, newWeight) },
                     onRepsChange = { newReps -> onRepsChanged(set.id, newReps) },
-                    onToggleComplete = {onToggleSetComplete(set.id)}
+                    onToggleComplete = { onToggleSetComplete(set.id) },
+                    onDeleteSet = { onDeleteSet(set.id) }
                 )
             }
 
@@ -157,7 +164,8 @@ fun SetInputRow(
     previousSetInfo: String,
     onWeightChange: (String) -> Unit,
     onRepsChange: (String) -> Unit,
-    onToggleComplete: () -> Unit
+    onToggleComplete: () -> Unit,
+    onDeleteSet: () -> Unit
 ) {
     val isCompleted = set.isCompleted
     val colors = if(isCompleted){
@@ -177,6 +185,15 @@ fun SetInputRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        IconButton(onClick = onDeleteSet, modifier = Modifier.size(24.dp)) {
+            Icon(
+                Icons.Default.Close,
+                contentDescription = "Delete Set",
+                tint = MaterialTheme.colorScheme.error
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+
         Column(modifier = Modifier.weight(0.7f), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "$setNumber",
