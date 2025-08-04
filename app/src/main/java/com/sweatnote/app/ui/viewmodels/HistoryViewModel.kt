@@ -3,6 +3,7 @@ package com.sweatnote.app.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sweatnote.app.data.WorkoutHistoryDao
+import com.sweatnote.app.data.WorkoutSession
 import com.sweatnote.app.data.WorkoutSessionWithDetails
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -11,12 +12,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 
-class HistoryViewModel (workoutHistoryDao: WorkoutHistoryDao) : ViewModel() {
+class HistoryViewModel (private val workoutHistoryDao: WorkoutHistoryDao) : ViewModel() {
     private val allSession = workoutHistoryDao.getAllSessionsWithDetails()
         .stateIn(
             scope = viewModelScope,
@@ -66,5 +68,11 @@ class HistoryViewModel (workoutHistoryDao: WorkoutHistoryDao) : ViewModel() {
 
     fun goToNextMonth() {
         _visibleMonth.value = _visibleMonth.value.plusMonths(1)
+    }
+
+    fun deleteSession(session: WorkoutSession) {
+        viewModelScope.launch {
+            workoutHistoryDao.deleteSession(session)
+        }
     }
 }

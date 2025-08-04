@@ -28,4 +28,26 @@ interface WorkoutHistoryDao{
     @Transaction
     @Query("SELECT * FROM workout_sessions ORDER BY date DESC LIMIT 1")
     fun getLatestSessionWithDetails(): Flow<WorkoutSessionWithDetails>
+
+    @Transaction
+    suspend fun deleteSession(session: WorkoutSession) {
+        val sessionExercises = getExercisesForSession(session.id)
+        val sessionExerciseIds = sessionExercises.map { it.id }
+
+        deleteSetsBySessionExerciseIds(sessionExerciseIds)
+        deleteExercisesBySessionId(session.id)
+        deleteSessionById(session.id)
+    }
+
+    @Query("SELECT * FROM session_exercises WHERE sessionId = :sessionId")
+    suspend fun getExercisesForSession(sessionId: Long): List<SessionExercise>
+
+    @Query("DELETE FROM session_sets WHERE sessionExerciseId IN (:sessionExerciseIds)")
+    suspend fun deleteSetsBySessionExerciseIds(sessionExerciseIds: List<Long>)
+
+    @Query("DELETE FROM session_exercises WHERE sessionId = :sessionId")
+    suspend fun deleteExercisesBySessionId(sessionId: Long)
+
+    @Query("DELETE FROM workout_sessions WHERE id = :sessionId")
+    suspend fun deleteSessionById(sessionId: Long)
 }

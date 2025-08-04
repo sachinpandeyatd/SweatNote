@@ -26,6 +26,10 @@ import androidx.compose.material.icons.outlined.Brightness4
 import androidx.compose.material.icons.outlined.Nightlight
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -37,11 +41,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -241,15 +249,14 @@ fun DayView(viewModel: HistoryViewModel) {
             }
         }else{
             items(sessionForDay, key = {it.session.id}) {session ->
-                WorkoutHistoryCard(session = session)
+                WorkoutHistoryCard(session = session, viewModel = viewModel)
             }
         }
     }
 }
 
 @Composable
-fun WorkoutHistoryCard(session: WorkoutSessionWithDetails) {
-    // Logic to determine the title and icon based on time of day
+fun WorkoutHistoryCard(session: WorkoutSessionWithDetails, viewModel: HistoryViewModel) {
     val calendar = Calendar.getInstance().apply { timeInMillis = session.session.date }
     val (title: String, icon: ImageVector) = when (calendar.get(Calendar.HOUR_OF_DAY)) {
         in 0..11 -> "Morning Workout" to Icons.Default.WbSunny
@@ -257,37 +264,57 @@ fun WorkoutHistoryCard(session: WorkoutSessionWithDetails) {
         else -> "Evening Workout" to Icons.Outlined.Nightlight
     }
 
+    var showDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showDialog) {
+        DeleteConfirmationDialog(
+            onConfirm = {
+                viewModel.deleteSession(session.session)
+                showDialog = false
+            },
+            onDismiss = { showDialog = false }
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        // Use more subtle colors for a premium feel
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)) {
-            // --- 1. Redesigned Title Row with Icon ---
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                IconButton(onClick = { showDialog = true }) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Delete Workout",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // --- 2. Improved Exercise and Set Display ---
-            // Using a Column to contain all exercises for consistent spacing
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 session.exercises.forEach { exerciseWithSets ->
                     Column {
-                        // Exercise Name stands out
                         Text(
                             text = exerciseWithSets.sessionExercise.exerciseName,
                             style = MaterialTheme.typography.titleMedium,
@@ -296,11 +323,9 @@ fun WorkoutHistoryCard(session: WorkoutSessionWithDetails) {
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Sets are clearly nested under the exercise
                         Column(modifier = Modifier.padding(start = 8.dp)) {
                             exerciseWithSets.sets.forEach { set ->
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // The bullet point for a classic list look
                                     Text(
                                         text = "•",
                                         style = MaterialTheme.typography.bodyLarge,
@@ -319,4 +344,29 @@ fun WorkoutHistoryCard(session: WorkoutSessionWithDetails) {
             }
         }
     }
+}
+
+@Composable
+fun DeleteConfirmationDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete Workout") },
+        text = { Text("Are you sure you want to permanently delete this workout session?") },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
